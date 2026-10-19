@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+enum ProcessingStatus {
+  CREATED
+  FETCHING
+  EXTRACTING
+  ANALYZING
+  EMBEDDING
+  COMPLETED
+  FAILED
+}
+model Source {
+  id String @id
+  name String
+  contents Content[]
+}
+model Content {
+  id String @id @default(uuid()) @db.Uuid
+  sourceId String
+  source Source @relation(fields: [sourceId], references: [id])
+  canonicalKey String? @unique
+  externalId String?
+  contentHash String @unique
+  originalUrl String?
+  title String
+  author String?
+  publishedAt DateTime?
+  capturedAt DateTime @default(now())
+  text String @db.Text
+  language String
+  metadata Json
+  raw Json
+  card KnowledgeCard?
+  references SourceReference[]
+  jobs ProcessingJob[]
+}
+model SourceReference {
+  id String @id @default(uuid()) @db.Uuid
+  contentId String @db.Uuid
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  originalUrl String?
+  capturedAt DateTime @default(now())
+  metadata Json
+}
+model KnowledgeCard {
+  id String @id @default(uuid()) @db.Uuid
+  contentId String @unique @db.Uuid
+  content Content @relation(fields: [contentId], references: [id])
+  title String
+  summary String @db.Text
+  language String
+  globalScore Float
+  activeRevisionId String? @unique @db.Uuid
+  processingVersion String
+  modelUsed String
+  promptVersion String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  topics Topic[]
+  concepts Concept[]
+  revisions CardAnalysis[]
+  jobs ProcessingJob[]
+}
+model CardAnalysis {
+  id String @id @default(uuid()) @db.Uuid
+  cardId String @db.Uuid
+  card KnowledgeCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  analysis Json
+  globalScore Float
+  provider String
+  model String
+  promptVersion String
+  processingVersion String
+  usage Json
+  createdAt DateTime @default(now())
+  embedding Embedding?
+}
+model Topic {
+  id String @id @default(uuid()) @db.Uuid
+  name String @unique
+  cards KnowledgeCard[]
+}
+model Concept {
+  id String @id @default(uuid()) @db.Uuid
+  name String @unique
+  cards KnowledgeCard[]
+}
+model Embedding {
+  id String @id @default(uuid()) @db.Uuid
+  revisionId String @unique @db.Uuid
+  revision CardAnalysis @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  provider String
+  model String
+  vector Unsupported("vector(1536)")
+}
+model ProcessingJob {
+  id String @id @default(uuid()) @db.Uuid
+  status ProcessingStatus @default(CREATED)
+  input Json
+  raw Json?
+  contentId String? @db.Uuid
+  content Content? @relation(fields: [contentId], references: [id])
+  cardId String? @db.Uuid
+  card KnowledgeCard? @relation(fields: [cardId], references: [id])
+  reanalyze Boolean @default(false)
+  attempts Int @default(0)
+  errorCode String?
+  errorMessage String?
+  retryable Boolean @default(true)
+  leaseUntil DateTime?
+  token String? @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status, leaseUntil])
+}

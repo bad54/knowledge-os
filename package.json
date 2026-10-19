@@ -1,0 +1,53 @@
+{
+  "name": "knowledge-os",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev -w @knowledge/api",
+    "dev:web": "npm run dev -w @knowledge/web",
+    "build:packages": "tsc -b packages/shared packages/domain",
+    "build": "npm run build:packages && npm run build -w @knowledge/api && npm run build -w @knowledge/web",
+    "typecheck": "npm run build:packages && tsc --noEmit -p apps/api && vue-tsc --noEmit -p apps/web",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run build:packages && vitest run",
+    "test:integration": "npm run build:packages && vitest run --config vitest.integration.config.mts",
+    "test:e2e": "playwright test",
+    "db:generate": "prisma generate --schema apps/api/prisma/schema.prisma",
+    "migration": "prisma migrate deploy --schema apps/api/prisma/schema.prisma",
+    "migration:dev": "prisma migrate dev --schema apps/api/prisma/schema.prisma",
+    "seed": "tsx --tsconfig apps/api/tsconfig.json apps/api/src/seed.ts",
+    "postinstall": "npm run db:generate"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@playwright/test": "^1.56.1",
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^24.0.0",
+    "@types/express": "^5.0.0",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.39.0",
+    "eslint-plugin-vue": "^10.5.0",
+    "prettier": "^3.6.2",
+    "prisma": "6.19.3",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "5.0.5",
+    "vue-eslint-parser": "^10.2.0",
+    "vue-tsc": "^3.1.0"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0",
+    "js-yaml@5.3.0": "^5.4.3"
+  }
+}
