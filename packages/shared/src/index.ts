@@ -1,4 +1,5 @@
 import { z } from 'zod';
+export { ZodError } from 'zod';
 
 export const sourceTypes = ['manual', 'web', 'youtube', 'reddit', 'x'] as const;
 export const statuses = [
