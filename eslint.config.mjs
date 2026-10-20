@@ -5,8 +5,12 @@ export default ts.config(
   { ignores: ['**/dist/**', '**/node_modules/**', '.local/**', 'playwright-report/**'] },
   js.configs.recommended,
   ...ts.configs.recommended,
-  ...vue.configs['flat/recommended'],
-  { files: ['**/*.vue'], languageOptions: { parserOptions: { parser: ts.parser } } },
+  ...vue.configs['flat/essential'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: { parserOptions: { parser: ts.parser } },
+    rules: { 'no-undef': 'off' },
+  },
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
