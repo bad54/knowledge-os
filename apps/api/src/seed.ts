@@ -32,9 +32,9 @@ async function main() {
         'Exemple fictif : chaque idée analysée doit rester reliée au texte original. Les interprétations automatiques sont conservées séparément. Les versions des analyses permettent de comprendre les changements.',
       ],
     ]) {
-      await jobs.create({ title, text });
-      // Seed before starting the API, so only this local provider consumes these demo jobs.
-      await pipeline.runOnce();
+      const job = await jobs.createClaimed({ title, text });
+      await pipeline.process(job);
+      if ((await jobs.get(job.id))?.status !== 'COMPLETED') throw new Error('Seed job failed');
     }
   } finally {
     await db.$disconnect();

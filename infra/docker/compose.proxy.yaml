@@ -1,0 +1,13 @@
+# Optional certificate mount for managed environments with an HTTPS proxy.
+services:
+  api:
+    build:
+      secrets:
+        - proxy_ca
+  web:
+    build:
+      secrets:
+        - proxy_ca
+secrets:
+  proxy_ca:
+    file: ${CODEX_PROXY_CERT:?Set CODEX_PROXY_CERT to the provided public CA certificate}

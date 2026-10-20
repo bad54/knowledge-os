@@ -1,5 +1,52 @@
 name: knowledge-os
 services:
+  api:
+    image: knowledge-os-api
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile
+      target: api
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-knowledge}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-knowledge}?schema=public
+      PORT: 3000
+    ports:
+      - '127.0.0.1:3000:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          'fetch("http://127.0.0.1:3000/api/health").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))',
+        ]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
+    restart: unless-stopped
+  web:
+    image: knowledge-os-web
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile
+      target: web
+    environment:
+      API_UPSTREAM: api:3000
+    ports:
+      - '127.0.0.1:5173:8080'
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-Y', 'off', '-q', '--spider', 'http://127.0.0.1:8080/api/health']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
   db:
     image: pgvector/pgvector:0.8.1-pg16
     environment:
@@ -16,5 +63,21 @@ services:
       timeout: 3s
       retries: 20
     restart: unless-stopped
+  n8n:
+    image: n8nio/n8n:2.42.6
+    profiles: ['automation']
+    ports:
+      - '127.0.0.1:5678:5678'
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      N8N_DIAGNOSTICS_ENABLED: 'false'
+      N8N_PERSONALIZATION_ENABLED: 'false'
+      GENERIC_TIMEZONE: Europe/Paris
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
 volumes:
   postgres_data:
+  n8n_data:

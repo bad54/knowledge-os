@@ -36,7 +36,7 @@ async function main() {
       ? ['playwright', 'test']
       : ['vitest', 'run', '--config', 'vitest.integration.config.mts'];
   const result = spawnSync('npx', args, { env, stdio: 'inherit' });
-  process.exitCode = result.status || 0;
+  process.exitCode = result.status ?? 1;
 }
 void main().catch(() => {
   process.stderr.write(

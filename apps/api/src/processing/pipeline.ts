@@ -1,4 +1,5 @@
 import { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { ProcessingJob } from '@prisma/client';
 import { AIProvider, PipelineError, RawContent } from '@knowledge/domain';
 import { analysisSchema, ingestSchema } from '@knowledge/shared';
 import { AdapterRegistry } from '../ingestion/adapters';
@@ -37,6 +38,10 @@ export class Pipeline implements OnModuleInit, OnModuleDestroy {
   async runOnce(): Promise<boolean> {
     const job = await this.jobs.claim();
     if (!job) return false;
+    await this.process(job);
+    return true;
+  }
+  async process(job: ProcessingJob): Promise<void> {
     const start = Date.now();
     const heartbeat = setInterval(() => {
       void this.jobs.heartbeat(job).catch(() => {});
@@ -119,6 +124,5 @@ export class Pipeline implements OnModuleInit, OnModuleDestroy {
     } finally {
       clearInterval(heartbeat);
     }
-    return true;
   }
 }

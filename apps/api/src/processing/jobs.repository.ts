@@ -10,6 +10,17 @@ export class JobsRepository {
   create(input: IngestInput) {
     return this.db.processingJob.create({ data: { input: json(input) } });
   }
+  createClaimed(input: IngestInput) {
+    return this.db.processingJob.create({
+      data: {
+        input: json(input),
+        status: 'FETCHING',
+        token: randomUUID(),
+        leaseUntil: new Date(Date.now() + 180000),
+        attempts: 1,
+      },
+    });
+  }
   list() {
     return this.db.processingJob.findMany({
       orderBy: { createdAt: 'desc' },
