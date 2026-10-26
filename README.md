@@ -70,6 +70,8 @@ Pour une API protégée, saisir son jeton via « Accès à l’API » dans l’i
 
 ## Vérifier
 
+Le workflow GitHub Actions `Knowledge OS checks` exécute les contrôles ci-dessous à chaque push sur `main` et sur les pull requests. Il utilise une base PostgreSQL/pgvector éphémère et le fournisseur local, sans secret ni appel IA payant. Les tests d’intégration et navigateur s’exécutent successivement.
+
 ```bash
 npm run typecheck
 npm run lint

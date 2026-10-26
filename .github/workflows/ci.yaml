@@ -1,0 +1,56 @@
+name: Knowledge OS checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgresql://knowledge:ci_only@localhost:5432/knowledge_ci?schema=public
+      AI_PROVIDER: local
+      LOG_LEVEL: silent
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.1-pg16
+        env:
+          POSTGRES_USER: knowledge
+          POSTGRES_PASSWORD: ci_only
+          POSTGRES_DB: knowledge_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U knowledge -d knowledge_ci"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npx tsc --noEmit -p tsconfig.tests.json
+      - run: npm run build
+      - run: npm run migration
+      - run: npm test
+      - run: npm run test:integration
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
