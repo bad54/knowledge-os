@@ -6,11 +6,11 @@ Le dépôt contient l’application complète, mais un push Git ne crée pas d�
 
 Un projet, trois services, un volume persistant :
 
-| Service | Source                                 | Configuration                                                                                         |
-| ------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| db      | pgvector/pgvector:0.8.1-pg16           | POSTGRES_USER/DB et mot de passe généré ; volume /var/lib/postgresql/data ; réseau privé              |
-| api     | Dépôt bad54/knowledge-os, branche main | Dockerfile infra/docker/Dockerfile ; KNOWLEDGE_IMAGE_TARGET=api ; PORT=3000 ; healthcheck /api/health |
-| web     | Même dépôt et Dockerfile               | KNOWLEDGE_IMAGE_TARGET=web ; API_UPSTREAM=api.railway.internal:3000 ; domaine HTTPS sur port 8080     |
+| Service | Source                                 | Configuration                                                                                                 |
+| ------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| db      | pgvector/pgvector:0.8.1-pg16           | POSTGRES_USER/DB et mot de passe généré ; volume /var/lib/postgresql/data ; réseau privé                      |
+| api     | Dépôt bad54/knowledge-os, branche main | Dockerfile infra/docker/Dockerfile.railway ; KNOWLEDGE_IMAGE_TARGET=api ; PORT=3000 ; healthcheck /api/health |
+| web     | Même dépôt et Dockerfile               | KNOWLEDGE_IMAGE_TARGET=web ; API_UPSTREAM=api.railway.internal:3000 ; domaine HTTPS sur port 8080             |
 
 Conserver la racine du dépôt comme build context : les packages partagés sont nécessaires. Railway transmet les variables déclarées `ARG` pendant le build ; seul le choix de cible est un build argument. Ne jamais déclarer de secret IA comme build argument ni le compiler dans Vue.
 
@@ -37,3 +37,5 @@ Définir `REQUIRE_API_TOKEN=true` sur l’API avant la première publication. Le
 - Plan de sauvegarde/restauration et monitoring de consommation.
 
 Pour un serveur Docker classique, conserver la configuration Compose sur l’interface loopback et ajouter un reverse proxy HTTPS authentifié adapté à votre domaine. Ne pas ouvrir simplement tous les ports sur Internet.
+
+Le Dockerfile Railway évite les montages BuildKit de secrets, refusés par son moteur de build v4. Le Dockerfile Compose conserve le certificat de proxy optionnel nécessaire dans l’environnement de développement géré. Aucun certificat de session ni secret n’est intégré aux images Railway.
