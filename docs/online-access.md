@@ -2,7 +2,7 @@
 
 Ouvrir **https://web-production-355c8.up.railway.app**.
 
-**État de publication :** le nouvel écran de verrouillage décrit ci-dessous est testé et présent dans le dépôt, mais son déploiement est actuellement bloqué par le constructeur Railway. Dans l’interface encore en ligne, utiliser **Accès à l’API**, puis enregistrer le jeton pour la session. Voir [l’état vérifié du déploiement](rollout-status.md).
+Le nouvel écran de connexion privée est en ligne. Actualiser la page pour charger la version corrigée ; une clé déjà enregistrée pour cette session reste utilisable. Voir [l’état vérifié du déploiement](rollout-status.md).
 
 L’accès aux connaissances est protégé par un jeton personnel :
 

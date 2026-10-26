@@ -9,22 +9,22 @@ Environnement : `production` (`9884fc3a-e954-4bff-97bb-2fc7b90559d7`).
 | Service | Déploiement actif vérifié            | État                |
 | ------- | ------------------------------------ | ------------------- |
 | db      | bd0109a2-c1b1-4ce8-bd00-efade7d042b5 | SUCCESS, 1 instance |
-| api     | d311f2d0-5af4-40cd-8e3f-fa4200d47b5f | SUCCESS, 1 instance |
-| web     | 8aa6bd33-7b95-4b33-bfc4-c33a7939af88 | SUCCESS, 1 instance |
+| api     | fccfc960-a304-4fef-bc05-6cebb857371a | SUCCESS, 1 instance |
+| web     | df2a048d-be11-4b95-92cd-4f1b810ec53a | SUCCESS, 1 instance |
 
 Le volume `knowledge-postgres` de 512 Mo est conservé à `/var/lib/postgresql/data`. Le cluster actif utilise `PGDATA=/var/lib/postgresql/data/knowledge-v1`. Le premier cluster, devenu incohérent pendant le placement initial, reste conservé dans l’ancien dossier `pgdata` ; aucun contenu utilisateur n’y avait été importé. Ne pas supprimer ces dossiers ni le volume sans revue et sauvegarde.
 
-La base et son volume sont en Europe (`europe-west4-drams3a`). Les instances applicatives actives sont encore en `us-west2` ; leurs configurations cibles sont en Europe pour un prochain déploiement. Les connexions privées entre régions ont été vérifiées. Cette répartition peut ajouter de la latence.
+La base, son volume, l’API et le frontend sont en Europe (`europe-west4-drams3a`). Les trois services sont en ligne, avec une instance active chacun et aucun déploiement en cours.
 
-## Mise à jour de l’accès privé — publication bloquée
+## Mise à jour de l’accès privé — publiée et vérifiée
 
 Le commit `ecf75a5a7dbc71b2cbb4c5c40c7c8593e9d4efac` ajoute un état « Votre bibliothèque est verrouillée », une connexion explicite, un bouton de verrouillage qui efface le jeton de l’onglet et la clarification « Analyse extractive ». Les 23 tests unitaires, 10 tests d’intégration PostgreSQL/pgvector et 5 tests navigateur passent, ainsi que TypeScript, lint, formatage et build. Le nouveau test navigateur vérifie une mauvaise clé, une bonne clé, le rechargement et le verrouillage sur mobile.
 
-Cette version n’est **pas encore publiée**. Les builds initiaux `9fae9e70-7d70-450d-8321-adf51cb80960` (web) et `7575fca9-591b-4640-adad-829491bff330` (api), puis les relances `04993e05-2ff6-416f-ac8a-7da6b330cbee` et `cc2f2c38-6e22-4224-97e5-281a6d77c198`, ont échoué avant compilation. Le constructeur Railway retourne `mount source: "overlay" ... err: invalid argument` dès la préparation du système de fichiers. Aucun changement du domaine, des secrets, du volume ou du réseau privé n’a été nécessaire.
+Le frontend corrigé est publié : déploiement `df2a048d-be11-4b95-92cd-4f1b810ec53a` en état SUCCESS, une instance active. Le JavaScript servi en HTTPS correspond exactement, par SHA-256, au build validé localement (`index-D9eOKtRu.js`). Le déploiement API `fccfc960-a304-4fef-bc05-6cebb857371a` est également en état SUCCESS avec une instance active. Les migrations ont passé le contrôle de démarrage de l’API.
 
-Une tentative de sélectionner un autre environnement de build via Config as Code a été refusée par Railway : ce mécanisme est désormais déprécié au profit de `.railway/railway.ts`. La tentative n’a modifié aucune configuration active et aucun fichier de contournement n’est conservé. Ne pas annoncer un changement de constructeur effectif.
+Le blocage initial du constructeur Railway (`mount source: "overlay" ... err: invalid argument`, avant compilation) ne s’est plus reproduit lors de cette relance. Aucun changement du constructeur, du domaine, des secrets, du volume ou du réseau privé n’a été nécessaire. La configuration reste DOCKERFILE / environnement de build V3. L’essai antérieur de Config as Code, refusé par Railway comme déprécié, n’a laissé aucun fichier ni modification active.
 
-Dernière vérification HTTPS en lecture seule le 26 octobre à **16 h 08 (Europe/Paris)** : interface, asset JavaScript et healthcheck HTTP 200 ; les sept routes de données/documentation contrôlées renvoient HTTP 401 sans clé ; une mauvaise clé est refusée ; la bonne clé donne accès aux deux fiches de test. L’asset servi reste celui de l’ancienne interface. Résoudre le problème du constructeur Railway, puis redéployer le commit applicatif, attendre SUCCESS et revérifier l’asset et les accès. Les identifiants ci-dessus permettent d’ouvrir un ticket Railway sans transmettre les secrets.
+Dernière vérification HTTPS en lecture seule le 26 octobre à **15 h 31 (Europe/Paris)** : interface, asset JavaScript et healthcheck HTTP 200 ; les sept routes de données/documentation contrôlées renvoient HTTP 401 sans clé ; une mauvaise clé est refusée ; la bonne clé donne accès aux deux fiches existantes. Le fournisseur reste `local`, sans appel OpenAI. Aucune capture ni modification de données n’a été effectuée pour ces vérifications.
 
 ## Vérifications réelles
 
