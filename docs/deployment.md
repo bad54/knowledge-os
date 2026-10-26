@@ -39,3 +39,5 @@ Définir `REQUIRE_API_TOKEN=true` sur l’API avant la première publication. Le
 Pour un serveur Docker classique, conserver la configuration Compose sur l’interface loopback et ajouter un reverse proxy HTTPS authentifié adapté à votre domaine. Ne pas ouvrir simplement tous les ports sur Internet.
 
 Le Dockerfile Railway évite les montages BuildKit de secrets, refusés par son moteur de build v4. Le Dockerfile Compose conserve le certificat de proxy optionnel nécessaire dans l’environnement de développement géré. Aucun certificat de session ni secret n’est intégré aux images Railway.
+
+Le proxy web utilise les résolveurs DNS de son conteneur à chaque requête, avec un cache de dix secondes. Son processus démarre même si l’API n’est pas encore enregistrée dans le DNS privé ; le healthcheck attend ensuite la disponibilité de l’API. Les remplacements d’instances ne figent pas une ancienne adresse IP.

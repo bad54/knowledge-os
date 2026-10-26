@@ -25,7 +25,8 @@ USER root
 RUN mkdir -p /etc/nginx/templates && chown nginx:nginx /etc/nginx/templates && chmod 755 /etc/nginx/templates
 USER nginx
 ENV API_UPSTREAM=api:3000
-ENV NGINX_ENVSUBST_FILTER=API_UPSTREAM
+ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
+ENV NGINX_ENVSUBST_FILTER="API_UPSTREAM|NGINX_LOCAL_RESOLVERS"
 COPY --chown=nginx:nginx --chmod=0644 infra/docker/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build --chown=nginx:nginx /app/apps/web/dist /usr/share/nginx/html
 EXPOSE 8080
