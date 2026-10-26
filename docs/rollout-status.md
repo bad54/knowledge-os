@@ -9,22 +9,24 @@ Environnement : `production` (`9884fc3a-e954-4bff-97bb-2fc7b90559d7`).
 | Service | Déploiement actif vérifié            | État                |
 | ------- | ------------------------------------ | ------------------- |
 | db      | bd0109a2-c1b1-4ce8-bd00-efade7d042b5 | SUCCESS, 1 instance |
-| api     | fccfc960-a304-4fef-bc05-6cebb857371a | SUCCESS, 1 instance |
-| web     | df2a048d-be11-4b95-92cd-4f1b810ec53a | SUCCESS, 1 instance |
+| api     | eef9cbd9-0374-4562-a575-511cdf10f476 | SUCCESS, 1 instance |
+| web     | 42241265-b73b-40da-a33d-61e340153393 | SUCCESS, 1 instance |
 
 Le volume `knowledge-postgres` de 512 Mo est conservé à `/var/lib/postgresql/data`. Le cluster actif utilise `PGDATA=/var/lib/postgresql/data/knowledge-v1`. Le premier cluster, devenu incohérent pendant le placement initial, reste conservé dans l’ancien dossier `pgdata` ; aucun contenu utilisateur n’y avait été importé. Ne pas supprimer ces dossiers ni le volume sans revue et sauvegarde.
 
 La base, son volume, l’API et le frontend sont en Europe (`europe-west4-drams3a`). Les trois services sont en ligne, avec une instance active chacun et aucun déploiement en cours.
 
-## Mise à jour de l’accès privé — publiée et vérifiée
+## Veille RSS — publiée et vérifiée
 
-Le commit `ecf75a5a7dbc71b2cbb4c5c40c7c8593e9d4efac` ajoute un état « Votre bibliothèque est verrouillée », une connexion explicite, un bouton de verrouillage qui efface le jeton de l’onglet et la clarification « Analyse extractive ». Les 23 tests unitaires, 10 tests d’intégration PostgreSQL/pgvector et 5 tests navigateur passent, ainsi que TypeScript, lint, formatage et build. Le nouveau test navigateur vérifie une mauvaise clé, une bonne clé, le rechargement et le verrouillage sur mobile.
+Le module de veille est publié : commit fonctionnel `4f0335564f9680497c055ce5142b422ba10bc013`, puis correction RSS/CDATА `61f077dcc27b1668a6b577f876060d3b03bd9ddc`. Les deux services applicatifs sur cette version sont SUCCESS, avec une instance active chacun. La migration `20261026160000_watch` a été appliquée au démarrage sans supprimer les données existantes.
 
-Le frontend corrigé est publié : déploiement `df2a048d-be11-4b95-92cd-4f1b810ec53a` en état SUCCESS, une instance active. Le JavaScript servi en HTTPS correspond exactement, par SHA-256, au build validé localement (`index-D9eOKtRu.js`). Le déploiement API `fccfc960-a304-4fef-bc05-6cebb857371a` est également en état SUCCESS avec une instance active. Les migrations ont passé le contrôle de démarrage de l’API.
+La page `/watch` et son JavaScript sont servis en HTTPS avec HTTP 200. L’asset `index-DFa3nG3j.js` correspond exactement par SHA-256 au build validé localement. Validation : 31 tests unitaires, 22 tests PostgreSQL/pgvector, 6 tests navigateur ; TypeScript, lint, formatage et build passent. Le parcours navigateur RSS → Garder → Inbox → fiche avec texte intégral est testé sur mobile. Voir [utilisation de la veille](watch.md).
 
-Le blocage initial du constructeur Railway (`mount source: "overlay" ... err: invalid argument`, avant compilation) ne s’est plus reproduit lors de cette relance. Aucun changement du constructeur, du domaine, des secrets, du volume ou du réseau privé n’a été nécessaire. La configuration reste DOCKERFILE / environnement de build V3. L’essai antérieur de Config as Code, refusé par Railway comme déprécié, n’a laissé aucun fichier ni modification active.
+Vérification réelle le 26 octobre à **16 h 43 (Europe/Paris)** : une source de départ **GitHub Blog** (`https://github.blog/feed/`) a été ajoutée dans la veille initialement vide. La collecte `4f4d71f8-8a40-4deb-905a-9a4953adc20b` est COMPLETED : dix entrées examinées, dix propositions, aucune erreur de source. Les deux fiches présentes avant la collecte restent les deux seules fiches après celle-ci. Aucune proposition n’a été gardée automatiquement. La planification reste désactivée ; aucun critère personnel n’a été inventé ni clé OpenAI activée.
 
-Dernière vérification HTTPS en lecture seule le 26 octobre à **15 h 31 (Europe/Paris)** : interface, asset JavaScript et healthcheck HTTP 200 ; les sept routes de données/documentation contrôlées renvoient HTTP 401 sans clé ; une mauvaise clé est refusée ; la bonne clé donne accès aux deux fiches existantes. Le fournisseur reste `local`, sans appel OpenAI. Aucune capture ni modification de données n’a été effectuée pour ces vérifications.
+`GET /api/watch` retourne HTTP 401 sans bearer et HTTP 200 avec la clé configurée. Les réponses API portent `Cache-Control: private, no-store`. Les écrans de connexion et de verrouillage restent actifs. Aucun secret n’est présent dans les assets ou la documentation.
+
+L’incident antérieur du constructeur Railway (`mount source: "overlay" ... err: invalid argument`, avant compilation) ne s’est pas reproduit sur ces déploiements. Le constructeur reste DOCKERFILE / environnement de build V3 ; aucun contournement Config as Code n’est installé.
 
 ## Vérifications réelles
 
