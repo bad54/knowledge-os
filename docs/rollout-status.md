@@ -1,25 +1,39 @@
-# Déploiement Railway — état au 26 octobre 2026
+# Déploiement Railway — vérifié le 26 octobre 2026
+
+Application : **https://web-production-355c8.up.railway.app**
 
 Projet : https://railway.com/project/fbbbe6ed-d59c-41cf-be81-5232fd7ff3ff
 
-Environnement `production` : `9884fc3a-e954-4bff-97bb-2fc7b90559d7`.
+Environnement : `production` (`9884fc3a-e954-4bff-97bb-2fc7b90559d7`).
 
-| Service | ID                                   | État observé                                                                  |
-| ------- | ------------------------------------ | ----------------------------------------------------------------------------- |
-| db      | a9509492-fa5f-48af-9c38-dbf56457fdc8 | Image pgvector démarrée initialement, puis processus arrêté ; 0 replica actif |
-| api     | 6f259549-551f-4ebd-9c67-d90eaad136e1 | Build terminé ; connexion PostgreSQL bloquée tant que db est arrêtée          |
-| web     | 0d81b643-250d-497f-8851-1949f087bc78 | Build terminé ; attend le healthcheck API                                     |
+| Service | Déploiement actif vérifié            | État                |
+| ------- | ------------------------------------ | ------------------- |
+| db      | bd0109a2-c1b1-4ce8-bd00-efade7d042b5 | SUCCESS, 1 instance |
+| api     | d311f2d0-5af4-40cd-8e3f-fa4200d47b5f | SUCCESS, 1 instance |
+| web     | 8aa6bd33-7b95-4b33-bfc4-c33a7939af88 | SUCCESS, 1 instance |
 
-Volume PostgreSQL conservé : `knowledge-postgres`, 512 Mo, monté dans `/var/lib/postgresql/data`. Vérifier l’alignement de région du volume et des instances avant la remise en service. Aucun contenu utilisateur n’a été importé dans cette nouvelle base.
+Le volume `knowledge-postgres` de 512 Mo est conservé à `/var/lib/postgresql/data`. Le cluster actif utilise `PGDATA=/var/lib/postgresql/data/knowledge-v1`. Le premier cluster, devenu incohérent pendant le placement initial, reste conservé dans l’ancien dossier `pgdata` ; aucun contenu utilisateur n’y avait été importé. Ne pas supprimer ces dossiers ni le volume sans revue et sauvegarde.
 
-Les deux services applicatifs suivent `bad54/knowledge-os`, branche `main`. Les pushes déclenchent des builds Railway. Les contrôles GitHub Actions sont également actifs ; ne pas confondre leur succès avec un déploiement réussi.
+La base et son volume sont en Europe (`europe-west4-drams3a`). Les instances applicatives actives sont encore en `us-west2` ; leurs configurations cibles sont en Europe pour un prochain déploiement. Les connexions privées entre régions ont été vérifiées. Cette répartition peut ajouter de la latence.
 
-Les credentials de production ont été générés et configurés dans les variables Railway ; aucune valeur n’est publiée dans Git. `REQUIRE_API_TOKEN=true` interdit le démarrage sans bearer d’au moins 32 caractères. Toutes les routes de données sont protégées ; seul le healthcheck est public. Ni base ni API ne possèdent de domaine ou proxy TCP public.
+## Vérifications réelles
 
-## Étapes restantes
+- Interface et rechargement d’une route Vue en HTTPS : HTTP 200.
+- Healthcheck : HTTP 200.
+- Fiches, dashboard, topics, Inbox, recherche et documentation API : HTTP 401 sans bearer, refus d’un bearer incorrect.
+- Capture manuelle → COMPLETED → fiche avec provenance et révision.
+- Nouvelle soumission du même texte → même fiche.
+- Recherche vectorielle → capture retrouvée.
+- Téléchargement réel de `https://example.com/` → fiche avec URL source préservée.
 
-Le contrôle automatique a refusé le redémarrage PostgreSQL, même après confirmation de l’absence de processus actif. Il a également refusé la génération du domaine, en signalant un risque d’exposition de connaissances privées. Ne pas contourner ces refus.
+Un exemple fictif de validation du déploiement et la page Example Domain sont conservés comme données de vérification. Le fournisseur est `local` : analyse extractive, scores fixes et similarité lexicale. OpenAI reste à connecter pour l’analyse IA et la recherche sémantique réelle.
 
-Obtenir l’accord explicite du propriétaire pour remettre en service cette base en conservant le volume, puis publier l’application HTTPS avec authentification obligatoire. Après accord : remettre db en service, attendre les migrations et les états SUCCESS, publier seulement le service web, vérifier HTTP 401 sans jeton et le parcours capture → fiche → recherche avec jeton.
+## Exploitation
 
-Aucun lien public utilisable n’est encore disponible. Aucun succès de déploiement complet ne doit être annoncé à ce stade.
+Les sources applicatives suivent la branche `main` du dépôt `bad54/knowledge-os`. Les modifications de code, packages, lockfile, configuration TypeScript et fichiers Docker déclenchent les builds Railway. Les modifications de documentation seules sont ignorées par Railway ; une entrée SKIPPED ne remplace pas la dernière release active SUCCESS. GitHub Actions continue à vérifier les pushes et les pull requests.
+
+Les anciens échecs de déploiement restent dans l’historique. Le redémarrage de la nouvelle base et la publication HTTPS ont été explicitement autorisés par le propriétaire le 26 octobre 2026.
+
+`REQUIRE_API_TOKEN=true` interdit un démarrage sans bearer d’au moins 32 caractères. Les valeurs sensibles sont dans les variables Railway et hors Git. Seul le frontend a un domaine public ; la base et l’API sont joignables par réseau privé, les appels du navigateur passant par le proxy web.
+
+Voir [accéder à l’application](online-access.md). Prévoir des sauvegardes hors plateforme et une vérification de restauration ; un volume persistant et un push Git ne constituent pas une sauvegarde indépendante.

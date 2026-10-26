@@ -1,5 +1,7 @@
 # Knowledge OS
 
+**Application en ligne : https://web-production-355c8.up.railway.app** — accès aux connaissances protégé par jeton. Voir le [guide d’accès](docs/online-access.md).
+
 Gestion personnelle de connaissances : capturer une ressource, conserver sa provenance, produire une fiche structurée et la retrouver par recherche.
 
 Vue 3 / TypeScript / Vite, NestJS REST + Swagger, Prisma, PostgreSQL + pgvector. Monolithe modulaire ; n8n optionnel.
