@@ -30,7 +30,9 @@ function value(node: Element, ...names: string[]) {
   return child(node, ...names)?.textContent?.trim() || '';
 }
 export function parseFeed(xml: string, baseUrl: string): FeedEntry[] {
-  if (Buffer.byteLength(xml, 'utf8') > 2 * 1024 * 1024 || /<!DOCTYPE|<!ENTITY/i.test(xml))
+  // Code samples inside CDATA/comments are text, not active XML declarations.
+  const declarations = xml.replace(/<!\[CDATA\[[\s\S]*?\]\]>/g, '').replace(/<!--[\s\S]*?-->/g, '');
+  if (Buffer.byteLength(xml, 'utf8') > 2 * 1024 * 1024 || /<!DOCTYPE|<!ENTITY/i.test(declarations))
     throw new PipelineError(
       'INVALID_FEED',
       'Flux XML trop volumineux ou déclaration externe refusée',

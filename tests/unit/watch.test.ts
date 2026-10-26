@@ -11,6 +11,14 @@ const settings: WatchSettingsInput = {
   scheduleEnabled: false,
 };
 describe('RSS / Atom discovery and explicit keyword ranking', () => {
+  it('allows literal HTML declaration examples in CDATA without allowing active XML declarations', () => {
+    const xml =
+      '<rss><channel><item><title>HTML guide</title><link>https://example.com/html</link><description><![CDATA[<pre>&lt;!DOCTYPE html&gt;</pre><p>Example: <!DOCTYPE html></p>]]></description></item></channel></rss>';
+    expect(parseFeed(xml, 'https://example.com/feed')[0].excerpt).toContain('<!DOCTYPE html>');
+    expect(() =>
+      parseFeed('<!-- safe comment --><!DOCTYPE rss><rss/>', 'https://example.com/feed'),
+    ).toThrow();
+  });
   it('normalizes RSS, strips markup, preserves attribution and rejects unsafe item links', () => {
     const entries = parseFeed(
       `<rss version="2.0"><channel><language>fr-FR</language><item><guid>article-1</guid><title>Un guide n8n</title><link>/article?utm_source=rss</link><description><![CDATA[<p>Un résumé <b>utile</b>.</p><script>bad()</script>]]></description><author>Marie</author><pubDate>Mon, 26 Oct 2026 12:00:00 GMT</pubDate></item><item><title>Privé</title><link>http://127.0.0.1/secret</link></item></channel></rss>`,
