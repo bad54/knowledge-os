@@ -67,9 +67,9 @@ API 3000, Vite 5173 avec proxy `/api`. `npm run db:generate` régénère Prisma.
 | YOUTUBE_ACCESS_TOKEN                            | OAuth autorisé pour télécharger les sous-titres accessibles au compte      |
 | LOG_LEVEL                                       | info, debug, warn, error ou silent                                         |
 
-Pour une API protégée, saisir son jeton via « Accès à l’API » dans l’interface ; il reste dans le sessionStorage de l’onglet. Swagger/OpenAPI sont également protégés. Aucun secret dans le dépôt.
+Pour une API protégée, saisir son jeton confidentiel dans « Clé d’accès privée », puis « Ouvrir ma bibliothèque » ; il reste dans le sessionStorage de l’onglet. « Verrouiller » efface cette copie et retire les fiches affichées. Sans clé valide, la bibliothèque affiche son état verrouillé. Swagger/OpenAPI sont également protégés. Aucun secret dans le dépôt. Voir [accès en ligne et confidentialité](docs/online-access.md).
 
-**Mode local** : résumé extractif, scores fixes 5/10 et similarité lexicale. Il permet d’utiliser le produit sans API externe ; ce n’est pas une analyse IA ni une recherche sémantique réelle. OpenAI active les deux. Une réanalyse crée une version avec le fournisseur courant.
+**Fournisseur local / Analyse extractive** : résumé extractif, scores fixes 5/10 et similarité lexicale, traités sur le serveur applicatif. Il permet d’utiliser le produit sans API externe ; ce n’est pas une analyse IA ni une recherche sémantique réelle. Ce nom ne signifie pas que les données sont stockées sur votre ordinateur : sur Railway, elles restent hébergées chez Railway. OpenAI active l’analyse IA et la recherche sémantique en transmettant les contenus nécessaires au fournisseur. Une réanalyse crée une version avec le fournisseur courant.
 
 ## Vérifier
 

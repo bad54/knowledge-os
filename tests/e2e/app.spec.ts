@@ -1,4 +1,52 @@
 import { expect, test } from '@playwright/test';
+test('private library requires a key and locking clears the displayed data', async ({
+  page,
+  request,
+}) => {
+  // The real API auth guard is covered by integration tests. This boundary exercises
+  // the browser's handling of its 401 responses without production credentials.
+  const key = 'browser-test-key';
+  const title = 'Private library E2E ' + Date.now();
+  const created = await request.post('http://127.0.0.1:3101/api/jobs', {
+    data: {
+      title,
+      text: 'Conserver la provenance et protéger les connaissances personnelles. ' + title,
+    },
+  });
+  expect(created.ok()).toBe(true);
+  const job = (await created.json()) as { id: string };
+  await expect
+    .poll(async () => {
+      const response = await request.get('http://127.0.0.1:3101/api/jobs/' + job.id);
+      return ((await response.json()) as { status: string }).status;
+    })
+    .toBe('COMPLETED');
+  await page.route('**/api/**', async (route) => {
+    if (route.request().headers().authorization === 'Bearer ' + key) await route.continue();
+    else await route.fulfill({ status: 401, json: { message: 'Unauthorized' } });
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/knowledge');
+  const locked = page.getByRole('heading', { name: 'Votre bibliothèque est verrouillée' });
+  await expect(locked).toBeVisible();
+  await expect(page.locator('.knowledge-card')).toHaveCount(0);
+  const form = page.getByRole('form', { name: 'Connexion privée' });
+  await form.getByLabel('Clé d’accès privée').fill('wrong-key');
+  await form.getByRole('button', { name: 'Ouvrir ma bibliothèque' }).click();
+  await expect(form.getByRole('alert')).toContainText('une clé valide');
+  await expect(locked).toBeVisible();
+  await form.getByLabel('Clé d’accès privée').fill(key);
+  await form.getByRole('button', { name: 'Ouvrir ma bibliothèque' }).click();
+  await expect(page.locator('.knowledge-card').filter({ hasText: title })).toBeVisible();
+  await page.reload();
+  await expect(page.locator('.knowledge-card').filter({ hasText: title })).toBeVisible();
+  await page.getByRole('button', { name: 'Verrouiller', exact: true }).click();
+  await expect(locked).toBeVisible();
+  await expect(page.locator('.knowledge-card')).toHaveCount(0);
+  expect(await page.evaluate(() => sessionStorage.getItem('knowledge-api-token'))).toBeNull();
+  await page.reload();
+  await expect(locked).toBeVisible();
+});
 test('manual capture, card, source provenance, search and reanalysis', async ({ page }) => {
   const title = 'Reporting E2E ' + Date.now();
   await page.goto('/inbox');

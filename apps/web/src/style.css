@@ -779,3 +779,42 @@ dd {
     font-size: 0.67rem;
   }
 }
+.access-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.access-actions button {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+}
+.private-lock {
+  margin-top: 26px;
+  background: #eef3e9;
+}
+.private-lock h1 {
+  font-family: Manrope, system-ui;
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+}
+.private-lock p {
+  max-width: 700px;
+}
+.connection .error {
+  width: 100%;
+  margin: 0;
+}
+@media (max-width: 650px) {
+  .topline {
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .access-actions {
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .access-actions .pill {
+    font-size: 0.65rem;
+  }
+}
