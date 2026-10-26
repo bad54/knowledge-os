@@ -103,6 +103,7 @@ model ProcessingJob {
   status ProcessingStatus @default(CREATED)
   input Json
   raw Json?
+  discovery Json?
   contentId String? @db.Uuid
   content Content? @relation(fields: [contentId], references: [id])
   cardId String? @db.Uuid
@@ -116,5 +117,80 @@ model ProcessingJob {
   token String? @db.Uuid
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  watchCandidate WatchCandidate?
   @@index([status, leaseUntil])
+}
+
+enum WatchRunStatus {
+  CREATED
+  FETCHING
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+enum WatchCandidateStatus {
+  PENDING
+  ACCEPTED
+  DISMISSED
+}
+model WatchSettings {
+  id String @id @default("personal")
+  topics String[] @default([])
+  includeKeywords String[] @default([])
+  excludeKeywords String[] @default([])
+  languages String[] @default([])
+  dailyLimit Int @default(5)
+  scheduleEnabled Boolean @default(false)
+  nextRunAt DateTime?
+  updatedAt DateTime @updatedAt
+}
+model WatchSource {
+  id String @id @default(uuid()) @db.Uuid
+  name String
+  url String @unique
+  enabled Boolean @default(true)
+  lastSuccessAt DateTime?
+  errorMessage String?
+  createdAt DateTime @default(now())
+  candidates WatchCandidate[]
+}
+model WatchRun {
+  id String @id @default(uuid()) @db.Uuid
+  status WatchRunStatus @default(CREATED)
+  trigger String @default("manual")
+  settingsSnapshot Json?
+  scanned Int @default(0)
+  added Int @default(0)
+  filtered Int @default(0)
+  issues Json @default("[]")
+  errorMessage String?
+  attempts Int @default(0)
+  token String? @db.Uuid
+  leaseUntil DateTime?
+  createdAt DateTime @default(now())
+  finishedAt DateTime?
+  @@index([status, leaseUntil])
+}
+model WatchCandidate {
+  id String @id @default(uuid()) @db.Uuid
+  sourceId String @db.Uuid
+  source WatchSource @relation(fields: [sourceId], references: [id])
+  url String @unique
+  externalId String?
+  title String
+  excerpt String @db.Text
+  author String?
+  language String @default("und")
+  publishedAt DateTime?
+  discoveredAt DateTime @default(now())
+  feedSnapshot Json
+  selectionScore Float
+  reasons String[]
+  rankingVersion String
+  status WatchCandidateStatus @default(PENDING)
+  decision String?
+  decidedAt DateTime?
+  jobId String? @unique @db.Uuid
+  job ProcessingJob? @relation(fields: [jobId], references: [id])
+  @@index([status, discoveredAt])
 }

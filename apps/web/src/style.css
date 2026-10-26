@@ -785,6 +785,77 @@ dd {
   align-items: center;
   flex-wrap: wrap;
 }
+.watch-setup {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+.watch-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.watch-form h2,
+.watch-form p {
+  margin: 0;
+}
+.watch-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.watch-checkbox input {
+  width: auto;
+}
+.watch-source {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #dce4d9;
+  padding-top: 16px;
+  margin-top: 16px;
+  overflow-wrap: anywhere;
+}
+.watch-source button {
+  align-self: start;
+}
+.watch-candidate,
+.watch-history {
+  margin-bottom: 18px;
+  overflow-wrap: anywhere;
+}
+.watch-candidate h3 {
+  font-size: 1.2rem;
+  overflow-wrap: anywhere;
+}
+.watch-candidate-meta,
+.watch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.watch-run {
+  border-top: 1px solid #dce4d9;
+  padding-top: 16px;
+  margin-top: 16px;
+}
+.watch-run strong {
+  margin-right: 12px;
+}
+@media (max-width: 850px) {
+  .watch-setup {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 650px) {
+  .sidebar nav {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
 .access-actions button {
   padding: 6px 10px;
   font-size: 0.75rem;

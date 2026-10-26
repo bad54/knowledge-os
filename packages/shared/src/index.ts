@@ -1,6 +1,7 @@
 import { z } from 'zod';
 export { ZodError } from 'zod';
 export type { CardView, CardDetail, JobView, DashboardView, Label } from './views';
+export * from './watch';
 
 export const sourceTypes = ['manual', 'web', 'youtube', 'reddit', 'x'] as const;
 export const statuses = [

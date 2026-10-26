@@ -1,4 +1,46 @@
 import { expect, test } from '@playwright/test';
+test('RSS watch settings, collection, approval and resulting card work on mobile', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/watch');
+  await expect(page.getByRole('heading', { name: 'Ma veille', exact: true })).toBeVisible();
+  const criteria = page.getByRole('form', { name: 'Réglages de veille' });
+  await criteria.getByLabel('Sujets (séparés par des virgules)', { exact: true }).fill('n8n');
+  await criteria.getByLabel('Langues (codes séparés par des virgules)', { exact: true }).fill('fr');
+  await criteria.getByRole('button', { name: 'Enregistrer mes critères' }).click();
+  await expect(page.getByRole('status')).toContainText('Réglages enregistrés');
+  const source = page.getByRole('form', { name: 'Ajouter un flux' });
+  await source.getByLabel('Nom du flux', { exact: true }).fill('Flux de veille E2E');
+  await source
+    .getByLabel('URL du flux RSS ou Atom', { exact: true })
+    .fill('https://example.com/watch-feed');
+  await source.getByRole('button', { name: 'Ajouter le flux', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('Flux enregistré');
+  await page.getByRole('button', { name: 'Lancer ma veille', exact: true }).click();
+  const candidate = page.locator('.watch-candidate').filter({ hasText: 'Veille n8n et reporting' });
+  await expect(candidate).toBeVisible({ timeout: 20000 });
+  await expect(page.locator('.watch-candidate')).toHaveCount(1);
+  await expect(candidate).toContainText('fiabilité non évaluées');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await candidate.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: test.info().outputPath('watch-selection-mobile.png') });
+  await candidate.getByRole('button', { name: 'Garder', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('envoyée à l’Inbox');
+  await page.getByRole('link', { name: 'Voir la fiche', exact: true }).click({ timeout: 20000 });
+  await expect(
+    page.getByRole('heading', { name: 'Veille n8n et reporting', exact: true }),
+  ).toBeVisible();
+  await page.getByText('Texte source original', { exact: true }).click();
+  await expect(page.locator('.source-text').first()).toContainText('contenu intégral');
+  await page.goto('/watch');
+  await expect(
+    criteria.getByLabel('Sujets (séparés par des virgules)', { exact: true }),
+  ).toHaveValue('n8n');
+  await expect(page.locator('.watch-candidate')).toHaveCount(0);
+});
 test('private library requires a key and locking clears the displayed data', async ({
   page,
   request,

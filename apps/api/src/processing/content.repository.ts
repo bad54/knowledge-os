@@ -59,7 +59,10 @@ export class ContentRepository {
               capturedAt: new Date(content.capturedAt),
               text: content.text,
               language: content.language,
-              metadata: json(content.metadata),
+              metadata: json({
+                ...content.metadata,
+                ...(job.discovery ? { discovery: job.discovery } : {}),
+              }),
               raw: json(raw.payload),
             },
           });
@@ -67,7 +70,11 @@ export class ContentRepository {
           data: {
             contentId: record.id,
             originalUrl: content.originalUrl,
-            metadata: json({ submittedTitle: content.title, sourceType: content.sourceType }),
+            metadata: json({
+              submittedTitle: content.title,
+              sourceType: content.sourceType,
+              ...(job.discovery ? { discovery: job.discovery } : {}),
+            }),
           },
         });
         await tx.processingJob.update({ where: { id: job.id }, data: { contentId: record.id } });

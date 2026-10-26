@@ -2,19 +2,22 @@
 
 Monolithe modulaire et workspace npm.
 
-| Dossier                 | Rôle                                         |
-| ----------------------- | -------------------------------------------- |
-| apps/web                | Vue 3, Composition API, client REST          |
-| apps/api/src/api        | Contrôleurs, validation et erreurs HTTP      |
-| apps/api/src/ingestion  | Registre et adapters                         |
-| apps/api/src/processing | File durable et pipeline                     |
-| apps/api/src/ai         | Fournisseurs IA                              |
-| apps/api/src/knowledge  | Lecture, filtres et recherche                |
-| packages/domain         | Ports, contenus normalisés et erreurs métier |
-| packages/shared         | Contrats Zod et vues TypeScript              |
-| infra                   | Images Docker et workflows externes          |
+| Dossier                 | Rôle                                                                 |
+| ----------------------- | -------------------------------------------------------------------- |
+| apps/web                | Vue 3, Composition API, client REST                                  |
+| apps/api/src/api        | Contrôleurs, validation et erreurs HTTP                              |
+| apps/api/src/ingestion  | Registre et adapters                                                 |
+| apps/api/src/processing | File durable et pipeline                                             |
+| apps/api/src/ai         | Fournisseurs IA                                                      |
+| apps/api/src/knowledge  | Lecture, filtres et recherche                                        |
+| apps/api/src/watch      | Découverte RSS, pré-tri, file durable et validation des propositions |
+| packages/domain         | Ports, contenus normalisés et erreurs métier                         |
+| packages/shared         | Contrats Zod et vues TypeScript                                      |
+| infra                   | Images Docker et workflows externes                                  |
 
 Les contrôleurs délèguent aux services. Aucun accès DB depuis Vue. Les appels IA restent dans les fournisseurs. Les adapters sont enregistrés dans la composition ; le pipeline ne contient pas de conditions par plateforme.
+
+La [veille](watch.md) découvre des candidats via le port `FeedReader`, les classe par mots-clés et conserve leurs snapshots. Seule une validation crée un job dans le pipeline existant ; un pourcentage de correspondance ne remplace pas le Knowledge Score. La planification interne reste indépendante de n8n et désactivée par défaut. Le lecteur réutilise le fetch sécurisé du produit.
 
 ## Décisions V1
 

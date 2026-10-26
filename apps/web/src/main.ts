@@ -6,6 +6,7 @@ import Inbox from './pages/Inbox.vue';
 import Knowledge from './pages/Knowledge.vue';
 import Detail from './pages/Detail.vue';
 import Search from './pages/Search.vue';
+import Watch from './pages/Watch.vue';
 import './style.css';
 const router = createRouter({
   history: createWebHistory(),
@@ -15,6 +16,7 @@ const router = createRouter({
     { path: '/knowledge', component: Knowledge },
     { path: '/knowledge/:id', component: Detail },
     { path: '/search', component: Search },
+    { path: '/watch', component: Watch },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 });

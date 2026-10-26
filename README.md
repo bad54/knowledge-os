@@ -6,6 +6,8 @@ Gestion personnelle de connaissances : capturer une ressource, conserver sa prov
 
 Vue 3 / TypeScript / Vite, NestJS REST + Swagger, Prisma, PostgreSQL + pgvector. Monolithe modulaire ; n8n optionnel.
 
+**Veille RSS/Atom** : la page « Ma veille » permet de choisir ses sujets, ajouter des flux publics, collecter les publications et garder une proposition pour créer sa fiche via l’Inbox. Pré-tri par mots-clés explicite, validation manuelle, plafond quotidien et collecte toutes les 24 heures opt-in. Voir [utilisation et limites](docs/watch.md). Aucun accès X/Reddit ni abonnement payant n’est activé.
+
 ## Démarrer avec Docker
 
 Prérequis : Git, Docker Engine/Desktop et Compose v2 ; ports locaux 5173, 3000 et 5432 disponibles.

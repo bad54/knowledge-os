@@ -24,6 +24,11 @@ import { Pipeline } from './processing/pipeline';
 import { KnowledgeService } from './knowledge/knowledge.service';
 import { JobsController, KnowledgeController } from './api/controllers';
 import { ApiErrors } from './api/errors';
+import { RssFeedReader } from './watch/feed';
+import { WatchRepository } from './watch/repository';
+import { WatchService } from './watch/service';
+import { WatchCollector, WatchWorker } from './watch/collector';
+import { WatchController } from './watch/controller';
 export interface AppOptions {
   ai?: AIProvider;
   fetcher?: ContentFetcher;
@@ -42,9 +47,25 @@ export async function createApplication(config: AppConfig, options: AppOptions =
     new WebPageAdapter(fetcher),
   ]);
   @Module({
-    controllers: [JobsController, KnowledgeController],
+    controllers: [JobsController, KnowledgeController, WatchController],
     providers: [
       Database,
+      {
+        provide: WatchRepository,
+        useFactory: (db: Database) => new WatchRepository(db),
+        inject: [Database],
+      },
+      {
+        provide: WatchService,
+        useFactory: (repository: WatchRepository) => new WatchService(repository),
+        inject: [WatchRepository],
+      },
+      {
+        provide: WatchCollector,
+        useFactory: (repository: WatchRepository) =>
+          new WatchCollector(repository, new RssFeedReader(fetcher)),
+        inject: [WatchRepository],
+      },
       {
         provide: JobsRepository,
         useFactory: (db: Database) => new JobsRepository(db),
@@ -64,6 +85,12 @@ export async function createApplication(config: AppConfig, options: AppOptions =
         ? []
         : [
             {
+              provide: WatchWorker,
+              useFactory: (repository: WatchRepository, collector: WatchCollector) =>
+                new WatchWorker(repository, collector),
+              inject: [WatchRepository, WatchCollector],
+            },
+            {
               provide: Pipeline,
               useFactory: (jobs: JobsRepository, contents: ContentRepository) =>
                 new Pipeline(jobs, contents, registry, ai),
@@ -79,6 +106,7 @@ export async function createApplication(config: AppConfig, options: AppOptions =
   app.use(expressJson({ limit: '512kb' }));
   const limits = new Map<string, { count: number; until: number }>();
   app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+    res.setHeader('Cache-Control', 'private, no-store');
     if (req.path === '/health') return next();
     if (config.API_TOKEN) {
       const actual = Buffer.from(req.headers.authorization || '');

@@ -65,6 +65,7 @@ onMounted(refresh);
         <RouterLink to="/" exact-active-class="selected">Vue d’ensemble</RouterLink>
         <RouterLink to="/inbox" active-class="selected">Inbox <span>＋</span></RouterLink>
         <RouterLink to="/knowledge" active-class="selected">Bibliothèque</RouterLink>
+        <RouterLink to="/watch" active-class="selected">Ma veille</RouterLink>
         <RouterLink to="/search" active-class="selected">Recherche</RouterLink>
       </nav>
       <div class="sidebar-bottom">
