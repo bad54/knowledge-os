@@ -194,7 +194,30 @@ describe('Real PostgreSQL, pgvector, durable pipeline and API', () => {
     expect(await db.cardAnalysis.count()).toBe(2);
   });
   it('rejects invalid input, unsafe URLs, UUIDs, scores and unauthorized requests', async () => {
-    expect((await fetch(base + '/api/cards')).status).toBe(401);
+    for (const path of [
+      '/cards',
+      '/dashboard',
+      '/topics',
+      '/jobs',
+      '/search?q=test',
+      '/docs',
+      '/openapi.json',
+    ]) {
+      expect((await fetch(base + '/api' + path)).status).toBe(401);
+    }
+    expect(
+      (await fetch(base + '/api/cards', { headers: { authorization: 'Bearer wrong-token' } }))
+        .status,
+    ).toBe(401);
+    expect(
+      (
+        await fetch(base + '/api/jobs', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ text }),
+        })
+      ).status,
+    ).toBe(401);
     for (const body of [
       {},
       { text: 'short' },

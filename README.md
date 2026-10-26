@@ -55,6 +55,7 @@ API 3000, Vite 5173 avec proxy `/api`. `npm run db:generate` régénère Prisma.
 | DATABASE_URL                                    | PostgreSQL en développement ; Compose fournit l’URL réseau interne à l’API |
 | POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB | Initialisation PostgreSQL Docker                                           |
 | API_TOKEN                                       | Bearer ; vide uniquement en local, obligatoire avant exposition publique   |
+| REQUIRE_API_TOKEN                               | `true` en ligne : refuse le démarrage sans jeton d’au moins 32 caractères  |
 | WEB_ORIGIN                                      | Origine autorisée, défaut http://localhost:5173                            |
 | AI_PROVIDER                                     | `local` sans clé ou `openai`                                               |
 | OPENAI_API_KEY                                  | Clé serveur, jamais dans Vue ou Git                                        |

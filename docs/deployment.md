@@ -28,6 +28,8 @@ Ce guide décrit une configuration reproductible ; il ne prouve pas qu’un proj
 
 ## Vérifications après publication
 
+Définir `REQUIRE_API_TOKEN=true` sur l’API avant la première publication. Le serveur refuse alors de démarrer si son jeton manque ou contient moins de 32 caractères. Seuls les assets Vue et le healthcheck sont accessibles sans jeton ; toutes les routes de connaissances, captures, recherche et documentation API exigent le bearer.
+
 - UI et routes Vue accessibles après rechargement direct.
 - API protégée : requêtes sans bearer refusées, `/api/health` disponible.
 - Texte de test → COMPLETED → fiche persistée → recherche ; supprimer/identifier ensuite cette capture de test.

@@ -11,6 +11,7 @@ const schema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   WEB_ORIGIN: z.string().url().default('http://localhost:5173'),
   API_TOKEN: z.string().default(''),
+  REQUIRE_API_TOKEN: z.enum(['true', 'false']).default('false'),
   AI_PROVIDER: z.enum(['local', 'openai']).default('local'),
   OPENAI_API_KEY: z.string().default(''),
   OPENAI_ANALYSIS_MODEL: z.string().default('gpt-4.1-mini'),
@@ -20,13 +21,15 @@ const schema = z.object({
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'silent']).default('info'),
 });
 export type AppConfig = z.infer<typeof schema>;
-export function loadConfig(): AppConfig {
-  const parsed = schema.safeParse(process.env);
+export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
+  const parsed = schema.safeParse(env);
   if (!parsed.success)
     throw new Error(
       'Configuration invalide : ' + parsed.error.issues.map((i) => i.path.join('.')).join(', '),
     );
   if (parsed.data.AI_PROVIDER === 'openai' && !parsed.data.OPENAI_API_KEY)
     throw new Error('OPENAI_API_KEY requis');
+  if (parsed.data.REQUIRE_API_TOKEN === 'true' && parsed.data.API_TOKEN.length < 32)
+    throw new Error('API_TOKEN doit contenir au moins 32 caractères pour une API exposée');
   return parsed.data;
 }
