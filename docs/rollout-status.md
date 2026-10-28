@@ -9,8 +9,8 @@ Environnement : `production` (`9884fc3a-e954-4bff-97bb-2fc7b90559d7`).
 | Service | Déploiement actif vérifié            | État                |
 | ------- | ------------------------------------ | ------------------- |
 | db      | bd0109a2-c1b1-4ce8-bd00-efade7d042b5 | SUCCESS, 1 instance |
-| api     | a49db0ed-024b-4c5a-a7b0-d628766ed90f | SUCCESS, 1 instance |
-| web     | 8382c3ab-850b-43f0-9338-61e46329b3e5 | SUCCESS, 1 instance |
+| api     | 5c45805f-c198-4a02-bbc3-517121c1937b | SUCCESS, 1 instance |
+| web     | c0d6b8f4-07f1-4690-9931-fc667b2a3b7b | SUCCESS, 1 instance |
 
 Le volume `knowledge-postgres` de 512 Mo est conservé à `/var/lib/postgresql/data`. Le cluster actif utilise `PGDATA=/var/lib/postgresql/data/knowledge-v1`. Le premier cluster, devenu incohérent pendant le placement initial, reste conservé dans l’ancien dossier `pgdata` ; aucun contenu utilisateur n’y avait été importé. Ne pas supprimer ces dossiers ni le volume sans revue et sauvegarde.
 
@@ -25,6 +25,14 @@ Vérification HTTPS réelle le **28 octobre 2026 à 8 h 52 (Europe/Paris)** : `/
 Le corpus de production est encore vide : zéro publication, zéro règle ; les deux ressources existantes sont conservées. Aucune capture fictive de X n’a été ajoutée pour ces contrôles. `X_BEARER_TOKEN` n’est pas configuré, les collectes officielles sont inactives. Le fournisseur reste `local`, sans synthèse IA ; l’utilisateur n’a pas encore d’accès développeur X. Pour commencer : [export V12 et import du corpus](x-corpus.md).
 
 Validation locale : **39 tests unitaires, 32 tests PostgreSQL/pgvector, 7 tests Chromium**, dont import V12 → fiche automatique → indexation en arrière-plan → question → extraits et références, sur mobile. TypeScript applicatif et tests, build, lint et formatage passent. Les appels X/OpenAI sont simulés dans les tests ; aucun appel payant réel n’a été réalisé. Ce jalon ne prétend pas collecter les tendances de X sans accès officiel ni gérer déjà un million de publications.
+
+## Connexion X et diagnostic — mise à jour du 28 octobre 2026
+
+Le jeton fourni par le propriétaire a été appliqué au service API ; seule sa présence a été vérifiée, sans lecture ni exposition de sa valeur. Trois sujets choisis par le propriétaire sont enregistrés : **IA et agents IA**, **automatisation et n8n**, **business et outils**. Chaque règle reste en pause et demande au maximum dix publications par exécution.
+
+Les premières collectes n’ont ajouté aucune publication. Après correction des messages d’erreur dans `de611ff71a49afef01e21012fc3d7a641420938c`, un seul essai supplémentaire a confirmé **HTTP 402** sur la recherche officielle X. Le compte doit disposer de l’accès payant ou des crédits requis ; aucun achat n’a été effectué. La présence du jeton ne constitue pas une validation de ces droits. Le compteur applicatif indique quarante lectures réservées pour les quatre essais ; ce nombre ne représente ni des publications récupérées ni un montant facturé par X. Pas de relance automatique tant que ce blocage n’est pas résolu.
+
+Les services API et web du tableau sont SUCCESS ; le constructeur web a nécessité une relance de son image. Vérification HTTPS : application et accès privé disponibles, jeton détecté, corpus toujours vide et deux ressources existantes conservées. GitHub Actions [40687564705](https://github.com/bad54/knowledge-os/actions/runs/40687564705) est SUCCESS : 44 tests unitaires, 32 tests PostgreSQL/pgvector et 7 tests navigateur. Aucun changement de schéma dans cette correction.
 
 ## Veille RSS — publiée et vérifiée
 
