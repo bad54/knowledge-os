@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font-family: system-ui;
+        width: 330px;
+        padding: 16px;
+      }
+      button {
+        padding: 9px 11px;
+        border: 0;
+        border-radius: 9px;
+        margin: 4px;
+        font-weight: 650;
+      }
+      .p {
+        background: #111;
+        color: #fff;
+      }
+      .s {
+        background: #eee;
+      }
+      .muted {
+        font-size: 12px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>X Knowledge OS V12.1</h3>
+    <div class="muted">Knowledge Graph + décision + mémoire personnalisée.</div>
+    <p>Signets : <b id="count">0</b></p>
+    <button id="start" class="p">Démarrer</button><button id="stop" class="s">Arrêter</button
+    ><br /><label class="muted"><input id="auto" type="checkbox" /> défilement auto</label
+    ><br /><button id="library" class="p">Ouvrir la bibliothèque</button
+    ><button id="export" class="s">Exporter vers Knowledge OS</button>
+    <div id="status" class="muted"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>

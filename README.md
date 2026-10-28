@@ -8,6 +8,10 @@ Vue 3 / TypeScript / Vite, NestJS REST + Swagger, Prisma, PostgreSQL + pgvector.
 
 **Veille RSS/Atom** : la page « Ma veille » permet de choisir ses sujets, ajouter des flux publics, collecter les publications et garder une proposition pour créer sa fiche via l’Inbox. Pré-tri par mots-clés explicite, validation manuelle, plafond quotidien et collecte toutes les 24 heures opt-in. Voir [utilisation et limites](docs/watch.md). Aucun accès X/Reddit ni abonnement payant n’est activé.
 
+## Corpus X
+
+La page **Corpus X** (`/x`) importe les publications JSON de l’extension V12, indexe le corpus et retrouve les sources utiles aux questions. Un bouton d’export à installer dans l’extension existante est téléchargeable depuis cette page. Les fiches sont sélectionnées automatiquement dans un plafond quotidien. Sans accès développeur X, l’import reste utilisable. Sans OpenAI, les réponses restent des extraits explicites. [Installation, API officielle, quotas et limites](docs/x-corpus.md).
+
 ## Démarrer avec Docker
 
 Prérequis : Git, Docker Engine/Desktop et Compose v2 ; ports locaux 5173, 3000 et 5432 disponibles.

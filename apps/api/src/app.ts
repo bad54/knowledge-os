@@ -5,7 +5,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NextFunction, Request, Response, json as expressJson } from 'express';
 import helmet from 'helmet';
-import { AIProvider, ContentFetcher } from '@knowledge/domain';
+import { AIProvider, ContentFetcher, KnowledgeReasoner } from '@knowledge/domain';
 import { AppConfig } from './config';
 import { Database } from './infrastructure/database';
 import { logger } from './infrastructure/logger';
@@ -29,27 +29,76 @@ import { WatchRepository } from './watch/repository';
 import { WatchService } from './watch/service';
 import { WatchCollector, WatchWorker } from './watch/collector';
 import { WatchController } from './watch/controller';
+import { XCorpusAdapter } from './x/adapter';
+import { XController } from './x/controller';
+import { XPostStore } from './x/store';
+import { XSearch } from './x/search';
+import { XService } from './x/service';
+import { XCollection } from './x/collection';
+import { XIndexer } from './x/indexer';
+import { XWorker } from './x/worker';
+import { XAnswers } from './x/answers';
+import { OfficialXClient, XDiscoveryClient } from './x/client';
+import { ExtractiveReasoner, OpenAIKnowledgeReasoner } from './ai/knowledge-reasoner';
 export interface AppOptions {
   ai?: AIProvider;
   fetcher?: ContentFetcher;
   worker?: boolean;
+  xClient?: XDiscoveryClient;
+  reasoner?: KnowledgeReasoner;
 }
 export async function createApplication(config: AppConfig, options: AppOptions = {}) {
   const ai =
     options.ai ||
     (config.AI_PROVIDER === 'openai' ? new OpenAIProvider(config) : new LocalProvider());
   const fetcher = options.fetcher || new SafeFetcher();
-  const registry = new AdapterRegistry([
-    new ManualTextAdapter(),
-    new YouTubeAdapter(fetcher, config),
-    new RestrictedPlatformAdapter('reddit'),
-    new RestrictedPlatformAdapter('x'),
-    new WebPageAdapter(fetcher),
-  ]);
+  const registry = (db: Database) =>
+    new AdapterRegistry([
+      new ManualTextAdapter(),
+      new YouTubeAdapter(fetcher, config),
+      new RestrictedPlatformAdapter('reddit'),
+      new XCorpusAdapter(db),
+      new WebPageAdapter(fetcher),
+    ]);
+  const reasoner =
+    options.reasoner ||
+    (config.AI_PROVIDER === 'openai'
+      ? new OpenAIKnowledgeReasoner(config)
+      : new ExtractiveReasoner());
   @Module({
-    controllers: [JobsController, KnowledgeController, WatchController],
+    controllers: [JobsController, KnowledgeController, WatchController, XController],
     providers: [
       Database,
+      { provide: XPostStore, useFactory: () => new XPostStore(config) },
+      { provide: XSearch, useFactory: (db: Database) => new XSearch(db, ai), inject: [Database] },
+      {
+        provide: XService,
+        useFactory: (db: Database, store: XPostStore, search: XSearch) =>
+          new XService(db, config, ai, store, search),
+        inject: [Database, XPostStore, XSearch],
+      },
+      {
+        provide: XCollection,
+        useFactory: (db: Database, store: XPostStore) =>
+          new XCollection(
+            db,
+            config,
+            options.xClient || new OfficialXClient(fetcher, config.X_BEARER_TOKEN),
+            store,
+          ),
+        inject: [Database, XPostStore],
+      },
+      {
+        provide: XIndexer,
+        useFactory: (db: Database) => new XIndexer(db, ai, config),
+        inject: [Database],
+      },
+      {
+        provide: XAnswers,
+        useFactory: (db: Database, search: XSearch) =>
+          new XAnswers(db, search, reasoner, config.OPENAI_ANALYSIS_MODEL),
+        inject: [Database, XSearch],
+      },
       {
         provide: WatchRepository,
         useFactory: (db: Database) => new WatchRepository(db),
@@ -85,6 +134,12 @@ export async function createApplication(config: AppConfig, options: AppOptions =
         ? []
         : [
             {
+              provide: XWorker,
+              useFactory: (collection: XCollection, indexer: XIndexer) =>
+                new XWorker(collection, indexer),
+              inject: [XCollection, XIndexer],
+            },
+            {
               provide: WatchWorker,
               useFactory: (repository: WatchRepository, collector: WatchCollector) =>
                 new WatchWorker(repository, collector),
@@ -92,9 +147,9 @@ export async function createApplication(config: AppConfig, options: AppOptions =
             },
             {
               provide: Pipeline,
-              useFactory: (jobs: JobsRepository, contents: ContentRepository) =>
-                new Pipeline(jobs, contents, registry, ai),
-              inject: [JobsRepository, ContentRepository],
+              useFactory: (jobs: JobsRepository, contents: ContentRepository, db: Database) =>
+                new Pipeline(jobs, contents, registry(db), ai),
+              inject: [JobsRepository, ContentRepository, Database],
             },
           ]),
     ],

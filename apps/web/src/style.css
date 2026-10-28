@@ -889,3 +889,23 @@ dd {
     font-size: 0.65rem;
   }
 }
+
+.x-post,
+.x-answer {
+  overflow-wrap: anywhere;
+}
+.x-post .prose {
+  max-height: 22rem;
+  overflow: auto;
+}
+.x-answer {
+  margin-top: 26px;
+}
+.x-citation {
+  display: inline-block;
+  margin: 0 8px 14px 0;
+}
+.x-history {
+  white-space: normal;
+  text-align: left;
+}

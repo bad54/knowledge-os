@@ -118,7 +118,124 @@ model ProcessingJob {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   watchCandidate WatchCandidate?
+  xPost XPost?
   @@index([status, leaseUntil])
+}
+
+model XRule {
+  id String @id @default(uuid()) @db.Uuid
+  name String
+  query String
+  topic String
+  mode String @default("recent")
+  startTime DateTime?
+  endTime DateTime?
+  enabled Boolean @default(false)
+  intervalMinutes Int @default(120)
+  maxPosts Int @default(20)
+  autoCards Boolean @default(true)
+  nextRunAt DateTime?
+  nextToken String?
+  sinceId String?
+  windowNewestId String?
+  archiveComplete Boolean @default(false)
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  runs XCollectionRun[]
+}
+model XCollectionRun {
+  id String @id @default(uuid()) @db.Uuid
+  ruleId String @db.Uuid
+  rule XRule @relation(fields: [ruleId], references: [id])
+  snapshot Json
+  page Json?
+  status ProcessingStatus @default(CREATED)
+  attempts Int @default(0)
+  token String? @db.Uuid
+  leaseUntil DateTime?
+  fetched Int @default(0)
+  added Int @default(0)
+  errorMessage String?
+  createdAt DateTime @default(now())
+  finishedAt DateTime?
+  @@index([status, leaseUntil])
+}
+model XPost {
+  id String @id
+  text String @db.Text
+  quotedText String @default("") @db.Text
+  quoteUrl String?
+  url String
+  authorId String?
+  authorHandle String?
+  authorName String?
+  conversationId String?
+  language String @default("und")
+  publishedAt DateTime?
+  capturedAt DateTime @default(now())
+  origin String
+  coverage String
+  links String[] @default([])
+  topics String[] @default([])
+  utilitySignal Int @default(0)
+  engagement Float?
+  momentum Float?
+  novelty Float?
+  indexStatus ProcessingStatus @default(CREATED)
+  indexAttempts Int @default(0)
+  indexToken String? @db.Uuid
+  indexLeaseUntil DateTime?
+  indexError String?
+  embeddingProvider String?
+  embeddingModel String?
+  vector Unsupported("vector(1536)")?
+  jobId String? @unique @db.Uuid
+  job ProcessingJob? @relation(fields: [jobId], references: [id])
+  captures XCapture[]
+  observations XObservation[]
+  @@index([capturedAt, id])
+  @@index([publishedAt, id])
+  @@index([indexStatus, indexLeaseUntil])
+  @@index([utilitySignal, id])
+  @@index([engagement, id])
+  @@index([momentum, id])
+}
+model XCapture {
+  id String @id @default(uuid()) @db.Uuid
+  postId String
+  post XPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  contentHash String
+  origin String
+  payload Json
+  capturedAt DateTime @default(now())
+  @@unique([postId, contentHash, origin])
+}
+model XObservation {
+  id String @id @default(uuid()) @db.Uuid
+  postId String
+  post XPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  metrics Json
+  engagement Float
+  capturedAt DateTime @default(now())
+  @@index([postId, capturedAt])
+}
+model XUsageDay {
+  day DateTime @id @db.Date
+  readsReserved Int @default(0)
+  cardsReserved Int @default(0)
+  embeddingsReserved Int @default(0)
+}
+model XAnswer {
+  id String @id @default(uuid()) @db.Uuid
+  cacheKey String @unique
+  question String
+  mode String
+  provider String
+  model String
+  promptVersion String
+  response Json
+  sources Json
+  createdAt DateTime @default(now())
 }
 
 enum WatchRunStatus {

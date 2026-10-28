@@ -1,4 +1,55 @@
 import { expect, test } from '@playwright/test';
+test('V12 JSON import, automatic card, corpus search and cited extracts work on mobile', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/x');
+  await expect(page.getByRole('heading', { name: 'Corpus X', exact: true })).toBeVisible();
+  const data = {
+    posts: [
+      {
+        post_id: '88888001',
+        text: 'Guide n8n pour automatiser le reporting universitaire. Un exemple de workflow conserve la provenance de chaque indicateur.',
+        author_name: 'Source E2E X',
+        url: 'https://x.com/test/status/88888001',
+        openaiKey: 'never-export-this',
+      },
+    ],
+  };
+  await page.getByLabel('Fichier JSON de publications').setInputFiles({
+    name: 'v12.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(data)),
+  });
+  await expect(page.getByRole('status')).toContainText('Import terminé : 1 ajoutées');
+  const post = page.locator('.x-post').filter({ hasText: 'Source E2E X' });
+  await expect(post).toBeVisible();
+  await page.getByRole('button', { name: 'Actualiser', exact: true }).click();
+  await expect(post.getByRole('link', { name: 'Voir la fiche' })).toBeVisible({ timeout: 20000 });
+  await expect(post).toContainText('COMPLETED', { timeout: 20000 });
+  await page
+    .getByLabel('Votre question', { exact: true })
+    .fill('Comment automatiser le reporting universitaire avec n8n ?');
+  await page.getByRole('button', { name: 'Interroger le corpus', exact: true }).click();
+  await expect(page.locator('.x-answer')).toContainText('Aucune synthèse');
+  await page.locator('.x-answer summary').filter({ hasText: '88888001' }).click();
+  await expect(page.locator('.x-answer .source-text')).toContainText(
+    'provenance de chaque indicateur',
+  );
+  await expect(page.locator('.x-answer')).not.toContainText('never-export-this');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.screenshot({ path: test.info().outputPath('x-corpus-mobile.png'), fullPage: true });
+  await page.reload();
+  await expect(page.getByText('Réponses enregistrées', { exact: true })).toBeVisible();
+  await page.getByLabel('Fichier JSON de publications').setInputFiles({
+    name: 'v12.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(data)),
+  });
+  await expect(page.getByRole('status')).toContainText('0 ajoutées, 1 déjà présentes');
+});
 test('RSS watch settings, collection, approval and resulting card work on mobile', async ({
   page,
 }) => {

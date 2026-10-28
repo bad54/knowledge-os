@@ -18,6 +18,10 @@ const schema = z.object({
   OPENAI_EMBEDDING_MODEL: z.string().default('text-embedding-3-small'),
   YOUTUBE_API_KEY: z.string().default(''),
   YOUTUBE_ACCESS_TOKEN: z.string().default(''),
+  X_BEARER_TOKEN: z.string().default(''),
+  X_DAILY_READ_LIMIT: z.coerce.number().int().min(10).max(100000).default(100),
+  X_AUTO_CARDS_PER_DAY: z.coerce.number().int().min(0).max(100).default(5),
+  X_EMBEDDINGS_PER_DAY: z.coerce.number().int().min(1).max(10000).default(500),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'silent']).default('info'),
 });
 export type AppConfig = z.infer<typeof schema>;

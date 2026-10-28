@@ -42,3 +42,7 @@ docker compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > .
 ```
 
 Conserver une copie chiffrée hors de cette machine et vérifier sa restauration sur une base isolée. Git ne sauvegarde pas les captures PostgreSQL. `docker compose down` conserve les volumes ; `down -v` les détruit. Changer le mot de passe dans `.env` ne change pas celui d’un volume déjà initialisé.
+
+## Corpus social X
+
+La migration `20261027090000_x_corpus` ajoute `XRule`, `XCollectionRun`, `XPost`, `XCapture`, `XObservation`, `XUsageDay` et `XAnswer`. Les captures sont immuables et dédupliquées par `(postId, contentHash, origin)` ; une projection de texte initial, des observations de métriques, un vecteur 1536 dimensions et un job optionnel sont liés à chaque identifiant X. Les réponses gardent leurs propres snapshots de sources, modèle et prompt. Index FTS GIN, topics GIN, HNSW cosinus et pagination par curseur. Les ajouts ne remplacent aucune table existante. Voir [corpus X](x-corpus.md) pour budgets, confidentialité et limites de volume.

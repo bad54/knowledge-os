@@ -44,7 +44,7 @@ async function main() {
   await app
     .get(Database)
     .$executeRawUnsafe(
-      'TRUNCATE "WatchCandidate","WatchRun","WatchSource","WatchSettings" CASCADE',
+      'TRUNCATE "XAnswer","XPost","XRule","XUsageDay","WatchCandidate","WatchRun","WatchSource","WatchSettings","ProcessingJob","Content","Topic","Concept" CASCADE',
     );
   await app.listen(3101, '127.0.0.1');
 }

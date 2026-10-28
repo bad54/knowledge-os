@@ -1,4 +1,5 @@
 import type { Analysis, IngestInput } from '@knowledge/shared';
+import type { EvidenceAnswer } from '@knowledge/shared';
 export type SourceType = 'manual' | 'web' | 'youtube' | 'reddit' | 'x';
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 export interface NormalizedContent {
@@ -33,6 +34,25 @@ export interface AIProvider {
   readonly embeddingModel: string;
   analyzeContent(content: NormalizedContent): Promise<AnalysisResult>;
   createEmbedding(text: string): Promise<number[]>;
+}
+export interface EvidenceDocument {
+  postId: string;
+  text: string;
+  origin: string;
+  coverage: string;
+}
+export interface KnowledgeReasoner {
+  readonly name: string;
+  decompose(question: string): Promise<string[]>;
+  rerank(
+    question: string,
+    documents: EvidenceDocument[],
+  ): Promise<{ postId: string; relevance: number; reason: string }[]>;
+  answer(
+    question: string,
+    mode: 'answer' | 'plan' | 'decision',
+    documents: EvidenceDocument[],
+  ): Promise<{ answer: EvidenceAnswer; model: string; promptVersion: string }>;
 }
 export interface ContentFetcher {
   fetch(

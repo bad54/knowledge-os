@@ -7,6 +7,7 @@ import Knowledge from './pages/Knowledge.vue';
 import Detail from './pages/Detail.vue';
 import Search from './pages/Search.vue';
 import Watch from './pages/Watch.vue';
+import XCorpus from './pages/XCorpus.vue';
 import './style.css';
 const router = createRouter({
   history: createWebHistory(),
@@ -17,6 +18,7 @@ const router = createRouter({
     { path: '/knowledge/:id', component: Detail },
     { path: '/search', component: Search },
     { path: '/watch', component: Watch },
+    { path: '/x', component: XCorpus },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 });
