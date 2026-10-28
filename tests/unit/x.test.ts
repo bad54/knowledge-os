@@ -117,6 +117,33 @@ describe('X source boundaries and evidence', () => {
       'incomplète',
     );
   });
+  it.each([
+    ['HTTP_402', 'crédits', false],
+    ['HTTP_429', 'HTTP 429', true],
+    ['HTTP_503', 'HTTP 503', true],
+    ['FETCH_TIMEOUT', 'FETCH_TIMEOUT', true],
+  ])(
+    'preserves actionable %s diagnostics without leaking external errors',
+    async (code, expected, retryable) => {
+      const client = new OfficialXClient(
+        {
+          fetch: async () => {
+            throw new PipelineError(code, 'secret-provider-message', retryable);
+          },
+        },
+        'private-key',
+      );
+      const error = await client.search({ query: 'AI', mode: 'recent', maxPosts: 10 }).then(
+        () => {
+          throw new Error('Expected X request to fail');
+        },
+        (e: unknown) => e as PipelineError,
+      );
+      expect(error).toMatchObject({ code, retryable });
+      expect(error.message).toContain(expected);
+      expect(error.message).not.toMatch(/secret-provider-message|private-key/);
+    },
+  );
   it('rejects made-up or missing evidence citations and identifies the extractive fallback', async () => {
     const section = { heading: 'Titre', kind: 'evidence', text: 'Texte', citations: [2] };
     expect(() => validateCitations({ sections: [section], warnings: [] }, 1)).toThrow('référence');
@@ -130,5 +157,22 @@ describe('X source boundaries and evidence', () => {
     expect(r.answer.sections[0]?.citations).toEqual([1]);
     expect(r.answer.warnings[0]).toContain('Aucune synthèse');
     await expect(reasoner.answer('Question', 'plan', [])).rejects.toThrow('fournisseur IA');
+  });
+  it('reports a network failure without treating it as a billing refusal', async () => {
+    const client = new OfficialXClient(
+      {
+        fetch: async () => {
+          throw Object.assign(new Error('secret-network-detail'), { code: 'ENETUNREACH' });
+        },
+      },
+      'private-key',
+    );
+    await expect(
+      client.search({ query: 'AI', mode: 'recent', maxPosts: 10 }),
+    ).rejects.toMatchObject({
+      code: 'X_NETWORK_ERROR',
+      message: expect.stringContaining('ENETUNREACH'),
+      retryable: true,
+    });
   });
 });

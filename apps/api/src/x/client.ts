@@ -175,14 +175,54 @@ export class OfficialXClient implements XDiscoveryClient {
       });
       payload = JSON.parse(result.text);
     } catch (error) {
+      if (error instanceof PipelineError && error.code === 'HTTP_402')
+        throw new PipelineError(
+          'HTTP_402',
+          'X demande un accès payant ou des crédits disponibles (HTTP 402). Vérifiez la facturation et les crédits de votre compte développeur X.',
+          false,
+        );
       if (
         error instanceof PipelineError &&
         ['HTTP_401', 'HTTP_403', 'HTTP_429', 'HTTP_400'].includes(error.code)
       )
         throw new PipelineError(
           error.code,
-          'X a refusé la requête : vérifiez le jeton, les droits de recherche, la requête et les limites du compte.',
+          `X a refusé la requête (${error.code.replace('_', ' ')}) : vérifiez le jeton, les droits de recherche, la requête et les limites du compte.`,
           error.code === 'HTTP_429',
+        );
+      if (error instanceof PipelineError && /^HTTP_\d{3}$/.test(error.code))
+        throw new PipelineError(
+          error.code,
+          `La recherche X a répondu ${error.code.replace('_', ' ')}. Réessayez après vérification du service X.`,
+          error.retryable,
+        );
+      const fetchErrors = [
+        'FETCH_TIMEOUT',
+        'DNS_TIMEOUT',
+        'UNSAFE_URL',
+        'TOO_LARGE',
+        'REDIRECT_LIMIT',
+      ];
+      if (error instanceof PipelineError && fetchErrors.includes(error.code))
+        throw new PipelineError(
+          error.code,
+          `Connexion à X impossible (${error.code}). Vérifiez la disponibilité réseau du serveur.`,
+          error.retryable,
+        );
+      const networkCodes = [
+        'ENOTFOUND',
+        'EAI_AGAIN',
+        'ECONNRESET',
+        'ECONNREFUSED',
+        'ENETUNREACH',
+        'ETIMEDOUT',
+      ];
+      const networkCode = error && typeof error === 'object' && 'code' in error ? error.code : null;
+      if (typeof networkCode === 'string' && networkCodes.includes(networkCode))
+        throw new PipelineError(
+          'X_NETWORK_ERROR',
+          `Connexion réseau à X impossible (${networkCode}). Vérifiez la connectivité du serveur.`,
+          true,
         );
       throw new PipelineError(
         'X_UNAVAILABLE',
