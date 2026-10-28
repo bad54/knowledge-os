@@ -1,4 +1,4 @@
-# Déploiement Railway — vérifié le 26 octobre 2026
+# Déploiement Railway — vérifié le 28 octobre 2026
 
 Application : **https://web-production-355c8.up.railway.app**
 
@@ -9,12 +9,22 @@ Environnement : `production` (`9884fc3a-e954-4bff-97bb-2fc7b90559d7`).
 | Service | Déploiement actif vérifié            | État                |
 | ------- | ------------------------------------ | ------------------- |
 | db      | bd0109a2-c1b1-4ce8-bd00-efade7d042b5 | SUCCESS, 1 instance |
-| api     | eef9cbd9-0374-4562-a575-511cdf10f476 | SUCCESS, 1 instance |
-| web     | 42241265-b73b-40da-a33d-61e340153393 | SUCCESS, 1 instance |
+| api     | a49db0ed-024b-4c5a-a7b0-d628766ed90f | SUCCESS, 1 instance |
+| web     | 8382c3ab-850b-43f0-9338-61e46329b3e5 | SUCCESS, 1 instance |
 
 Le volume `knowledge-postgres` de 512 Mo est conservé à `/var/lib/postgresql/data`. Le cluster actif utilise `PGDATA=/var/lib/postgresql/data/knowledge-v1`. Le premier cluster, devenu incohérent pendant le placement initial, reste conservé dans l’ancien dossier `pgdata` ; aucun contenu utilisateur n’y avait été importé. Ne pas supprimer ces dossiers ni le volume sans revue et sauvegarde.
 
 La base, son volume, l’API et le frontend sont en Europe (`europe-west4-drams3a`). Les trois services sont en ligne, avec une instance active chacun et aucun déploiement en cours.
+
+## Corpus X — premier jalon publié et vérifié
+
+Version fonctionnelle `4a292f61b2b1614b2b42742864ad066e37444b5c`, déployée avec succès sur les services API et web indiqués ci-dessus. La migration additive `20261027090000_x_corpus` a été appliquée au démarrage en production. Aucun redémarrage de base ni suppression de volume.
+
+Vérification HTTPS réelle le **28 octobre 2026 à 8 h 52 (Europe/Paris)** : `/x` et son JavaScript répondent HTTP 200 ; le SHA-256 de `index-DHxNRUc3.js` correspond au build validé localement. Le ZIP du bouton d’export V12 correspond exactement au fichier validé. Les routes corpus, publications et documentation API refusent les requêtes anonymes ; une mauvaise clé est refusée ; la clé configurée permet l’accès avec `Cache-Control: private, no-store`. Un import vide reçoit HTTP 400.
+
+Le corpus de production est encore vide : zéro publication, zéro règle ; les deux ressources existantes sont conservées. Aucune capture fictive de X n’a été ajoutée pour ces contrôles. `X_BEARER_TOKEN` n’est pas configuré, les collectes officielles sont inactives. Le fournisseur reste `local`, sans synthèse IA ; l’utilisateur n’a pas encore d’accès développeur X. Pour commencer : [export V12 et import du corpus](x-corpus.md).
+
+Validation locale : **39 tests unitaires, 32 tests PostgreSQL/pgvector, 7 tests Chromium**, dont import V12 → fiche automatique → indexation en arrière-plan → question → extraits et références, sur mobile. TypeScript applicatif et tests, build, lint et formatage passent. Les appels X/OpenAI sont simulés dans les tests ; aucun appel payant réel n’a été réalisé. Ce jalon ne prétend pas collecter les tendances de X sans accès officiel ni gérer déjà un million de publications.
 
 ## Veille RSS — publiée et vérifiée
 
