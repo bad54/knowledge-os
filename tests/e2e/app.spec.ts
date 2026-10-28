@@ -1,4 +1,15 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+// Follow the job created by this submission, even while an older list is visible.
+async function captureJob(page: Page) {
+  const response = page.waitForResponse(
+    (r) => new URL(r.url()).pathname === '/api/jobs' && r.request().method() === 'POST',
+  );
+  await page.getByRole('button', { name: 'Ajouter à mon Inbox' }).click();
+  const submitted = await response;
+  expect(submitted.status()).toBe(202);
+  const { id } = (await submitted.json()) as { id: string };
+  return page.locator('.job').filter({ hasText: id });
+}
 test('V12 JSON import, automatic card, corpus search and cited extracts work on mobile', async ({
   page,
 }) => {
@@ -151,10 +162,10 @@ test('manual capture, card, source provenance, search and reanalysis', async ({ 
       'Automatiser le reporting universitaire avec n8n. Conserver des données fiables et la provenance de chaque indicateur. Réduire les opérations manuelles pour gagner du temps. ' +
         title,
     );
-  await page.getByRole('button', { name: 'Ajouter à mon Inbox' }).click();
+  const job = await captureJob(page);
   await expect(page.getByRole('status')).toContainText('Ressource ajoutée');
-  await expect(page.locator('.job').first().getByText('COMPLETED', { exact: true })).toBeVisible();
-  await page.locator('.job').first().getByRole('link', { name: 'Voir la fiche' }).click();
+  await expect(job.getByText('COMPLETED', { exact: true })).toBeVisible();
+  await job.getByRole('link', { name: 'Voir la fiche' }).click();
   await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
   await page.getByText('Texte source original', { exact: true }).click();
   await expect(page.locator('.source-text').first()).toContainText(
@@ -162,28 +173,57 @@ test('manual capture, card, source provenance, search and reanalysis', async ({ 
   );
   await page.reload();
   await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
+  const reanalysisResponse = page.waitForResponse(
+    (r) => r.url().endsWith('/reanalyze') && r.request().method() === 'POST',
+  );
   await page.getByRole('button', { name: 'Réanalyser', exact: true }).click();
+  const reanalysis = await reanalysisResponse;
+  expect(reanalysis.status()).toBe(202);
+  const { id } = (await reanalysis.json()) as { id: string };
   await expect(page).toHaveURL(/\/inbox$/);
-  await expect(page.locator('.job').first().getByText('COMPLETED', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('.job').filter({ hasText: id }).getByText('COMPLETED', { exact: true }),
+  ).toBeVisible();
   await page.getByRole('link', { name: 'Recherche', exact: true }).click();
   await page.getByLabel('Votre recherche').fill(title);
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click();
   await expect(page.locator('.knowledge-card').filter({ hasText: title })).toBeVisible();
 });
 test('web URL capture retains its source URL', async ({ page }) => {
+  // Keep a snapshot of the old list in flight while a new job is submitted.
+  // This reproduces the CI race without relying on timing or arbitrary sleeps.
+  let releaseSnapshot!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    releaseSnapshot = resolve;
+  });
+  let snapshotReady!: () => void;
+  const ready = new Promise<void>((resolve) => {
+    snapshotReady = resolve;
+  });
+  let first = true;
+  await page.route('**/api/jobs', async (route) => {
+    if (route.request().method() === 'GET' && first) {
+      first = false;
+      const snapshot = await route.fetch();
+      snapshotReady();
+      await gate;
+      await route.fulfill({ response: snapshot });
+    } else await route.continue();
+  });
   await page.goto('/inbox');
-  await page
-    .getByLabel('URL de la ressource', { exact: true })
-    .fill('https://example.com/e2e-' + Date.now());
-  await page.getByRole('button', { name: 'Ajouter à mon Inbox' }).click();
-  await expect(page.locator('.job').first().getByText('COMPLETED', { exact: true })).toBeVisible();
-  await page.locator('.job').first().getByRole('link', { name: 'Voir la fiche' }).click();
+  await ready;
+  const sourceUrl = 'https://example.com/e2e-' + Date.now();
+  await page.getByLabel('URL de la ressource', { exact: true }).fill(sourceUrl);
+  const job = await captureJob(page);
+  releaseSnapshot();
+  await expect(job.getByText('COMPLETED', { exact: true })).toBeVisible();
+  await job.getByRole('link', { name: 'Voir la fiche' }).click();
   await expect(
     page.getByRole('heading', { name: 'Article web de test', exact: true }),
   ).toBeVisible();
   await expect(page.getByRole('link', { name: 'Ouvrir la source originale' })).toHaveAttribute(
     'href',
-    /https:\/\/example.com\/e2e-/,
+    sourceUrl,
   );
 });
 test('fetch errors are visible and can be retried', async ({ page }) => {
@@ -191,8 +231,7 @@ test('fetch errors are visible and can be retried', async ({ page }) => {
   await page
     .getByLabel('URL de la ressource', { exact: true })
     .fill('https://example.com/forbidden');
-  await page.getByRole('button', { name: 'Ajouter à mon Inbox' }).click();
-  const job = page.locator('.job').first();
+  const job = await captureJob(page);
   await expect(job.getByText('FAILED', { exact: true })).toBeVisible();
   await expect(job).toContainText('HTTP 403');
   await job.getByRole('button', { name: 'Relancer' }).click();
